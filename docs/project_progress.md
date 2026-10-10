@@ -77,6 +77,17 @@
 ## Phase 6 — UX Polish & Assessment (Current)
 - [x] **Phase A — Audit and specification**: Audited launch screens, loading indicators, error UI, OTP state, and offline/notification readiness.
 - [x] **Phase B — Visual polish and startup reliability**: Remove Flutter branding, remove redundant loading UI, create branded connection error experience.
+- [x] **Phase B follow-up — Splash gap**: Android 12+ splash uses a green icon (including night mode), WebView/window stay `#034F2A`, and a green cover hides the WebView until the first successful page finish.
+- [x] **Phase B follow-up — Provisional launch lockup**: Centered 69×65 web logo on the green cover. Android 12 circular splash and launcher icon still await UX assets.
 - [x] **Phase C — OTP autofill**: Implement safe, limited OTP autofill (fill, do not submit) using native APIs/WebView.
 - [x] **Phase D — Offline and notification assessment**: Finalize capability assessment document.
 - [x] **Phase E — Final verification**: Static analysis, formatting, tests, and build verification.
+
+---
+
+## Phase 7 — Stockist Retry Target & Session Investigation (2026-10-09)
+- [x] **Task A — Retry failed page**: Retry now reloads the failed main-frame HTTPS URL when it is on an approved application host; otherwise it falls back to `AppConfig.webAppUrl`. Retry does not recreate the WebView or clear cookies/localStorage.
+- [x] **Task B — Startup route**: Inspected `_loadContent()` / `AppConfig.webAppUrl`. The Next.js source is not in this repository, so the startup URL was **left at `/login`**. No speculative origin or path change.
+- [x] **Task C — Cold-start session**: Wrapper does not clear cookies/website data. Startup always loads `webAppUrl` (`…/login`). Session restoration cannot be confirmed without PWA/backend auth source.
+- [x] **Task D — Debug WebView inspect**: `AndroidWebViewController.enableDebugging(true)` is enabled only when `kDebugMode` on Android.
+- [ ] **Physical-device verification** of retry, back navigation, and session persistence (see checklist in `project_decisions.md`).
