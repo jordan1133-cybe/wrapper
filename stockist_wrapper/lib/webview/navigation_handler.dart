@@ -12,21 +12,29 @@ class NavigationHandler {
   static NavigationDelegate create({
     required void Function(int progress) onProgress,
     required void Function(bool isLoading) onLoadingChanged,
-    required void Function(String? errorDescription) onError,
+    required void Function(String? errorDescription, {String? failedUrl})
+    onError,
+    void Function(String url)? onMainFrameStarted,
+    void Function()? onMainFrameLoadSucceeded,
   }) => NavigationDelegate(
     onPageStarted: (url) {
       onLoadingChanged(true);
-      _log('Page started: $url');
+      onMainFrameStarted?.call(url);
+      _log('Page started: ${_safeUrlForLog(url)}');
     },
     onProgress: onProgress,
     onPageFinished: (url) {
       onLoadingChanged(false);
-      _log('Page finished: $url');
+      onMainFrameLoadSucceeded?.call();
+      _log('Page finished: ${_safeUrlForLog(url)}');
     },
     onWebResourceError: (error) {
       if (error.isForMainFrame == true) {
-        _log('Main-frame resource error: ${error.description}');
-        onError(error.description);
+        _log(
+          'Main-frame resource error: ${error.description} '
+          'url=${_safeUrlForLog(error.url)}',
+        );
+        onError(error.description, failedUrl: error.url);
       }
     },
     onNavigationRequest: _handleNavigationRequest,
@@ -42,7 +50,7 @@ class NavigationHandler {
       return NavigationDecision.prevent;
     }
 
-    _log('Navigation request: $url');
+    _log('Navigation request: ${_safeUrlForLog(url)}');
 
     // 1. Device hardware intents (dialer, mail, SMS, geo coordinates)
     if (const {'tel', 'mailto', 'sms', 'geo', 'intent'}.contains(uri.scheme) ||
@@ -105,5 +113,13 @@ class NavigationHandler {
     if (kDebugMode) {
       debugPrint('[Navigation] $message');
     }
+  }
+
+  /// Host + path only so query strings (which may contain tokens) are omitted.
+  static String _safeUrlForLog(String? url) {
+    if (url == null || url.isEmpty) return '(none)';
+    final uri = Uri.tryParse(url);
+    if (uri == null) return '(invalid)';
+    return '${uri.host}${uri.path}';
   }
 }

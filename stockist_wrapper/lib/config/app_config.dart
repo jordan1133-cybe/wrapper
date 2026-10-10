@@ -4,8 +4,7 @@ class AppConfig {
   /// Live Stockist deployment used for the working Android demo.
   ///
   /// The deployment currently serves the Stockist portal from the apex host.
-  static const String devUrl =
-      'https://dashensalestracking.wearecerta.app/login';
+  static const String devUrl = 'https://dashensalestracking.wearecerta.app';
 
   /// Intended Stockist production portal origin.
   ///
@@ -34,4 +33,30 @@ class AppConfig {
     'localhost',
     '127.0.0.1',
   ];
+
+  /// Application hosts that may be retried after a main-frame load failure.
+  ///
+  /// Loopback hosts remain in [trustedHosts] for local harness navigation, but
+  /// Retry must not load arbitrary or non-HTTPS URLs.
+  static const List<String> retryableApplicationHosts = [
+    'dashensalestracking.wearecerta.app',
+    'stockist.dashensalestracking.wearecerta.app',
+  ];
+
+  /// Returns true when [uri] is an HTTPS URL on an approved application host.
+  static bool isRetryableApplicationUrl(Uri uri) {
+    if (uri.scheme != 'https') return false;
+    if (uri.host.isEmpty) return false;
+    return retryableApplicationHosts.contains(uri.host.toLowerCase());
+  }
+
+  /// Picks a Retry target from a failed main-frame URL, or falls back to the
+  /// configured application entry URL when the failed URL is missing/untrusted.
+  static Uri resolveRetryUri(String? failedUrl) {
+    final parsed = failedUrl == null ? null : Uri.tryParse(failedUrl);
+    if (parsed != null && isRetryableApplicationUrl(parsed)) {
+      return parsed;
+    }
+    return Uri.parse(webAppUrl);
+  }
 }
