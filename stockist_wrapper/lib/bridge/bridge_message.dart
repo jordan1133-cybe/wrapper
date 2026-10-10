@@ -8,7 +8,7 @@ import 'bridge_constants.dart';
 /// ```json
 /// {
 ///   "requestId": "unique-id",
-///   "action": "get_location",
+///   "action": "start_otp_listener",
 ///   "payload": { ... }
 /// }
 /// ```
@@ -63,7 +63,7 @@ class BridgeRequest {
 /// ```json
 /// {
 ///   "requestId": "unique-id",
-///   "status": "success" | "error" | "denied" | "cancelled",
+///   "status": "success" | "error",
 ///   "payload": { ... },
 ///   "error": { "code": "...", "message": "..." }
 /// }
@@ -100,27 +100,6 @@ class BridgeResponse {
     error: BridgeError(code: code, message: message),
   );
 
-  factory BridgeResponse.denied(
-    String requestId, {
-    String message = 'Permission denied.',
-  }) => BridgeResponse(
-    requestId: requestId,
-    status: BridgeConstants.statusDenied,
-    error: BridgeError(
-      code: BridgeConstants.errorPermissionDenied,
-      message: message,
-    ),
-  );
-
-  factory BridgeResponse.cancelled(String requestId) => BridgeResponse(
-    requestId: requestId,
-    status: BridgeConstants.statusCancelled,
-    error: const BridgeError(
-      code: BridgeConstants.errorOperationCancelled,
-      message: 'Operation was cancelled by the user.',
-    ),
-  );
-
   Map<String, dynamic> toJson() => {
     'requestId': requestId,
     'status': status,
@@ -130,23 +109,12 @@ class BridgeResponse {
 
   String toJsonString() => jsonEncode(toJson());
 
+  /// Safe diagnostic string. Payload values are intentionally not printed.
   String toLogString() {
     if (error != null) {
       return 'BridgeResponse(id: $requestId, status: $status, error: ${error!.code} - ${error!.message})';
     }
-    if (payload == null) {
-      return 'BridgeResponse(id: $requestId, status: $status)';
-    }
-
-    final sanitizedPayload = Map<String, dynamic>.from(payload!)
-        .map((key, value) {
-          if (key == 'data' && value is String && value.length > 50) {
-            return MapEntry(key, '[base64 ${value.length} chars]');
-          }
-          return MapEntry(key, value);
-        });
-
-    return 'BridgeResponse(id: $requestId, status: $status, payload: $sanitizedPayload)';
+    return 'BridgeResponse(id: $requestId, status: $status, payloadKeys: ${payload?.keys.toList() ?? const []})';
   }
 }
 

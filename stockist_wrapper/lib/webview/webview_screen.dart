@@ -6,8 +6,6 @@ import '../bridge/bridge_handler.dart';
 import '../config/app_config.dart';
 import 'navigation_handler.dart';
 
-const Color _brandGreen = Color(0xFF034F2A);
-
 class WebViewScreen extends StatefulWidget {
   const WebViewScreen({super.key});
 
@@ -18,10 +16,6 @@ class WebViewScreen extends StatefulWidget {
 class _WebViewScreenState extends State<WebViewScreen> {
   late final WebViewController _controller;
   String? _errorMessage;
-  String? _failedMainFrameUrl;
-  String? _lastTrustedMainFrameUrl;
-  bool _mainFrameLoadFailed = false;
-  bool _pwaReady = false;
 
   @override
   void initState() {
@@ -29,7 +23,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
     _controller = WebViewController();
     BridgeHandler(_controller).register();
     _controller
-      ..setBackgroundColor(_brandGreen)
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationHandler.create(
@@ -38,36 +31,16 @@ class _WebViewScreenState extends State<WebViewScreen> {
             if (mounted && isLoading) {
               setState(() {
                 _errorMessage = null;
-                _mainFrameLoadFailed = false;
               });
             }
           },
-          onMainFrameStarted: (url) {
-            final uri = Uri.tryParse(url);
-            if (uri != null && AppConfig.isRetryableApplicationUrl(uri)) {
-              _lastTrustedMainFrameUrl = url;
+          onError: (description) {
+            if (mounted) {
+              setState(
+                () => _errorMessage =
+                    description ?? 'Failed to load the application.',
+              );
             }
-          },
-          onError: (description, {failedUrl}) {
-            if (!mounted) return;
-            setState(() {
-              _mainFrameLoadFailed = true;
-              final parsedFailedUrl = failedUrl == null
-                  ? null
-                  : Uri.tryParse(failedUrl);
-              if (parsedFailedUrl != null &&
-                  AppConfig.isRetryableApplicationUrl(parsedFailedUrl)) {
-                _failedMainFrameUrl = failedUrl;
-              }
-              _errorMessage = description ?? 'Failed to load the application.';
-            });
-          },
-          onMainFrameLoadSucceeded: () {
-            if (!mounted || _mainFrameLoadFailed) return;
-            setState(() {
-              _failedMainFrameUrl = null;
-              _pwaReady = true;
-            });
           },
         ),
       );
@@ -76,49 +49,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
   }
 
   Future<void> _loadContent() async {
-    if (AppConfig.useTestHarness) {
-      try {
-        final html = await rootBundle.loadString('assets/test_harness.html');
-        await _controller.loadHtmlString(html);
-      } catch (e) {
-        if (mounted) {
-          setState(() => _errorMessage = 'Failed to load test harness: $e');
-        }
-      }
-    } else {
-      _controller.loadRequest(Uri.parse(AppConfig.webAppUrl));
-    }
-  }
-
-  /// Reloads the failed main-frame URL when it is a trusted HTTPS application
-  /// URL. Does not recreate the WebView or clear cookies/localStorage.
-
-  void _retryFailedPage() {
-    if (AppConfig.useTestHarness) {
-      _loadContent();
-      return;
-    }
-
-    final sourceUrl = _failedMainFrameUrl ?? _lastTrustedMainFrameUrl;
-    final retryUri = AppConfig.resolveRetryUri(sourceUrl);
-
-    String describeUrl(String? value) {
-      if (value == null) return 'null';
-
-      final uri = Uri.tryParse(value);
-      if (uri == null) return 'invalid URL';
-
-      // Log only the host and path, not query parameters.
-      return '${uri.host}${uri.path}';
-    }
-
-    debugPrint('[Retry] Failed URL: ${describeUrl(_failedMainFrameUrl)}');
-    debugPrint(
-      '[Retry] Last trusted URL: ${describeUrl(_lastTrustedMainFrameUrl)}',
-    );
-    debugPrint('[Retry] Selected URL: ${describeUrl(retryUri.toString())}');
-
-    _controller.loadRequest(retryUri);
+    await _controller.loadRequest(Uri.parse(AppConfig.webAppUrl));
   }
 
   Future<void> _onBackPressed(bool didPop, Object? _) async {
@@ -135,12 +66,11 @@ class _WebViewScreenState extends State<WebViewScreen> {
     canPop: false,
     onPopInvokedWithResult: _onBackPressed,
     child: Scaffold(
-      backgroundColor: _brandGreen,
+      backgroundColor: const Color(0xFF034F2A), // Dashen Green
       body: SafeArea(
         child: Stack(
           children: [
             WebViewWidget(controller: _controller),
-            if (!_pwaReady && _errorMessage == null) _launchCover(),
             if (_errorMessage != null) _errorOverlay(),
           ],
         ),
@@ -148,22 +78,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
     ),
   );
 
-  /// Full-screen brand hold while the WebView is still blank. The PWA splash
-  /// is covered on purpose so the user never sees a black native surface.
-  Widget _launchCover() => const ColoredBox(
-    color: _brandGreen,
-    child: Center(
-      child: Image(
-        image: AssetImage('assets/branding/dashen_logo.png'),
-        width: 96,
-        filterQuality: FilterQuality.medium,
-        semanticLabel: 'Dashen',
-      ),
-    ),
-  );
-
   Widget _errorOverlay() => Container(
-    color: _brandGreen,
+    color: const Color(0xFF034F2A), // Dashen Green
     alignment: Alignment.center,
     padding: const EdgeInsets.all(32),
     child: Column(
@@ -199,7 +115,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
             setState(() {
               _errorMessage = null;
             });
-            _retryFailedPage();
+            _loadContent();
           },
           icon: const Icon(Icons.refresh),
           label: const Text(

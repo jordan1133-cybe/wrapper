@@ -12,29 +12,21 @@ class NavigationHandler {
   static NavigationDelegate create({
     required void Function(int progress) onProgress,
     required void Function(bool isLoading) onLoadingChanged,
-    required void Function(String? errorDescription, {String? failedUrl})
-    onError,
-    void Function(String url)? onMainFrameStarted,
-    void Function()? onMainFrameLoadSucceeded,
+    required void Function(String? errorDescription) onError,
   }) => NavigationDelegate(
     onPageStarted: (url) {
       onLoadingChanged(true);
-      onMainFrameStarted?.call(url);
-      _log('Page started: ${_safeUrlForLog(url)}');
+      _log('Page started: $url');
     },
     onProgress: onProgress,
     onPageFinished: (url) {
       onLoadingChanged(false);
-      onMainFrameLoadSucceeded?.call();
-      _log('Page finished: ${_safeUrlForLog(url)}');
+      _log('Page finished: $url');
     },
     onWebResourceError: (error) {
       if (error.isForMainFrame == true) {
-        _log(
-          'Main-frame resource error: ${error.description} '
-          'url=${_safeUrlForLog(error.url)}',
-        );
-        onError(error.description, failedUrl: error.url);
+        _log('Main-frame resource error: ${error.description}');
+        onError(error.description);
       }
     },
     onNavigationRequest: _handleNavigationRequest,
@@ -50,10 +42,12 @@ class NavigationHandler {
       return NavigationDecision.prevent;
     }
 
-    _log('Navigation request: ${_safeUrlForLog(url)}');
+    _log('Navigation request: $url');
 
-    // 1. Device hardware intents (dialer, mail, SMS, geo coordinates)
-    if (const {'tel', 'mailto', 'sms', 'geo', 'intent'}.contains(uri.scheme) ||
+    // 1. Device hardware intents (dialer, mail, SMS, geo coordinates).
+    // `intent:` URIs are deliberately NOT handled here: they can address
+    // arbitrary activities, so they fall through to the blocked-scheme rule.
+    if (const {'tel', 'mailto', 'sms', 'geo'}.contains(uri.scheme) ||
         _isMapUrl(uri)) {
       _launchExternal(uri);
       return NavigationDecision.prevent;
@@ -113,13 +107,5 @@ class NavigationHandler {
     if (kDebugMode) {
       debugPrint('[Navigation] $message');
     }
-  }
-
-  /// Host + path only so query strings (which may contain tokens) are omitted.
-  static String _safeUrlForLog(String? url) {
-    if (url == null || url.isEmpty) return '(none)';
-    final uri = Uri.tryParse(url);
-    if (uri == null) return '(invalid)';
-    return '${uri.host}${uri.path}';
   }
 }
