@@ -5,8 +5,8 @@ plugins {
 }
 
 android {
-    // TODO(PRODUCTION): Confirm this final Android namespace with the PM.
-    namespace = "com.dashen.breweries.stockist"
+    
+    namespace = "com.dashen.breweries.salesincentive"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

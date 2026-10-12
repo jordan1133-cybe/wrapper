@@ -1,20 +1,16 @@
-import 'dart:io' show Platform;
 
-import 'package:flutter/foundation.dart';
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
+
 
 import 'config/app_config.dart';
 import 'webview/webview_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // Debug-only: chrome://inspect of the Android WebView. Never enabled in
-  // release builds. Do not log cookies, tokens, or OTP values here.
-  if (kDebugMode && !kIsWeb && Platform.isAndroid) {
-    AndroidWebViewController.enableDebugging(true);
-  }
+  
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Color(0xFF034F2A),
