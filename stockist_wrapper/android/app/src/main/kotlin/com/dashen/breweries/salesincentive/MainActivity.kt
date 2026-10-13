@@ -1,4 +1,4 @@
-package com.dashen.breweries.stockist
+package com.dashen.breweries.salesincentive
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
