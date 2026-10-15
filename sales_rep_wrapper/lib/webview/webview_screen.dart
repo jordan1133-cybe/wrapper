@@ -25,8 +25,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
     super.initState();
     _controller = WebViewController();
     BridgeHandler(_controller).register();
-    WebViewPermissions(trustedOrigin: Uri.parse(AppConfig.webAppUrl).origin)
-        .attach(_controller);
     _controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -52,6 +50,12 @@ class _WebViewScreenState extends State<WebViewScreen> {
           },
         ),
       );
+
+    // Must be registered AFTER setNavigationDelegate so the geolocation
+    // callbacks are not overwritten when the delegate installs its
+    // WebChromeClient.
+    WebViewPermissions(trustedOrigin: Uri.parse(AppConfig.webAppUrl).origin)
+        .attach(_controller);
 
     _loadContent();
   }
