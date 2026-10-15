@@ -4,8 +4,6 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../config/app_config.dart';
 
-/// Handles WebView navigation decisions — keeping trusted PWA pages inside
-/// the WebView while dispatching external links and device intents safely.
 class NavigationHandler {
   NavigationHandler._();
 
@@ -44,44 +42,36 @@ class NavigationHandler {
 
     _log('Navigation request: $url');
 
-    // 1. Device hardware intents (dialer, mail, SMS, geo coordinates)
-    if (const {'tel', 'mailto', 'sms', 'geo', 'intent'}.contains(uri.scheme) ||
+    if (const {'tel', 'mailto', 'sms', 'geo'}.contains(uri.scheme) ||
         _isMapUrl(uri)) {
       _launchExternal(uri);
       return NavigationDecision.prevent;
     }
 
-    // 2. Trusted internal PWA navigation -> stay in WebView
     if (_isInternalUrl(uri)) {
       return NavigationDecision.navigate;
     }
 
-    // 3. External HTTP / HTTPS links -> open in external system browser
     if (uri.scheme == 'http' || uri.scheme == 'https') {
       _launchExternal(uri);
       return NavigationDecision.prevent;
     }
 
-    // 4. Unknown schemes -> block for security
     _log('Blocked untrusted URL scheme: $url');
     return NavigationDecision.prevent;
   }
 
-  /// Verifies if a given URI belongs to trusted internal PWA domains.
   static bool _isInternalUrl(Uri uri) {
     if (uri.host.isEmpty) return false;
 
-    // Direct match against active webAppUrl
     final activeAppUri = Uri.tryParse(AppConfig.webAppUrl);
     if (activeAppUri != null && uri.host == activeAppUri.host) {
       return true;
     }
 
-    // Match against configured trusted host list
     return AppConfig.trustedHosts.contains(uri.host.toLowerCase());
   }
 
-  /// Identifies common mapping providers for external dispatch.
   static bool _isMapUrl(Uri uri) {
     final host = uri.host.toLowerCase();
     return host.contains('maps.google.com') ||

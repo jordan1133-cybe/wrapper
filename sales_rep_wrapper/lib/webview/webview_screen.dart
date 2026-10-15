@@ -56,6 +56,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
     );
 
     final trustedOrigin = Uri.parse(AppConfig.webAppUrl).origin;
+    // Keep these after setNavigationDelegate; that setup can replace the callbacks.
     await WebViewPermissions(trustedOrigin: trustedOrigin).attach(_controller);
     await WebViewFileSelector(
       controller: _controller,
@@ -67,18 +68,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
   }
 
   Future<void> _loadContent() async {
-    if (AppConfig.useTestHarness) {
-      try {
-        final html = await rootBundle.loadString('assets/test_harness.html');
-        await _controller.loadHtmlString(html);
-      } catch (e) {
-        if (mounted) {
-          setState(() => _errorMessage = 'Failed to load test harness: $e');
-        }
-      }
-    } else {
-      _controller.loadRequest(Uri.parse(AppConfig.webAppUrl));
-    }
+    await _controller.loadRequest(Uri.parse(AppConfig.webAppUrl));
   }
 
   Future<void> _onBackPressed(bool didPop, Object? _) async {

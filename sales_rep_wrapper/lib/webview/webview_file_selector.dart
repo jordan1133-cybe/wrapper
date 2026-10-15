@@ -8,7 +8,6 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 enum _PhotoSource { camera, gallery }
 
-/// Handles image selection requested by trusted WebView file inputs.
 class WebViewFileSelector {
   WebViewFileSelector({
     required this.controller,
@@ -103,6 +102,7 @@ class WebViewFileSelector {
   }
 
   bool _isTrustedUrl(String url) {
+    // Only the trusted PWA may launch a native image picker.
     final uri = Uri.tryParse(url);
     return uri != null &&
         WebViewPermissions.isTrustedOrigin(uri.origin, trustedOrigin);
@@ -139,7 +139,6 @@ class WebViewFileSelector {
   }
 }
 
-/// Returns whether an HTML file input accepts at least one image format.
 bool acceptsImages(List<String> acceptTypes) {
   if (acceptTypes.isEmpty) return true;
 

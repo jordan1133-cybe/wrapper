@@ -47,10 +47,7 @@ void main() {
 
     test('different host is rejected', () {
       expect(
-        WebViewPermissions.isTrustedOrigin(
-          'https://evil.example.com',
-          trusted,
-        ),
+        WebViewPermissions.isTrustedOrigin('https://evil.example.com', trusted),
         isFalse,
       );
     });
@@ -99,24 +96,15 @@ void main() {
     });
 
     test('empty string is rejected', () {
-      expect(
-        WebViewPermissions.isTrustedOrigin('', trusted),
-        isFalse,
-      );
+      expect(WebViewPermissions.isTrustedOrigin('', trusted), isFalse);
     });
 
     test('garbage string is rejected', () {
-      expect(
-        WebViewPermissions.isTrustedOrigin('not-a-url', trusted),
-        isFalse,
-      );
+      expect(WebViewPermissions.isTrustedOrigin('not-a-url', trusted), isFalse);
     });
 
     test('"null" string is rejected', () {
-      expect(
-        WebViewPermissions.isTrustedOrigin('null', trusted),
-        isFalse,
-      );
+      expect(WebViewPermissions.isTrustedOrigin('null', trusted), isFalse);
     });
 
     test('request with path still matches on origin', () {
