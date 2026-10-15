@@ -19,8 +19,10 @@ class WebViewPermissions {
   Future<void> attach(WebViewController controller) async {
     final platform = controller.platform;
     if (platform is! AndroidWebViewController) {
-      _log('Skipped: platform is not AndroidWebViewController '
-          '(${platform.runtimeType})');
+      _log(
+        'Skipped: platform is not AndroidWebViewController '
+        '(${platform.runtimeType})',
+      );
       return;
     }
 
@@ -52,7 +54,6 @@ class WebViewPermissions {
   /// proper URI origin semantics (scheme + host + port).
   ///
   /// This is a pure function so it can be unit-tested independently.
-  @visibleForTesting
   static bool isTrustedOrigin(String requestOrigin, String trusted) {
     final requestUri = Uri.tryParse(requestOrigin);
     final trustedUri = Uri.tryParse(trusted);

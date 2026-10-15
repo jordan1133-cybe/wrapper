@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../bridge/bridge_handler.dart';
 import '../config/app_config.dart';
 import 'navigation_handler.dart';
+import 'webview_file_selector.dart';
 
 class WebViewScreen extends StatefulWidget {
   const WebViewScreen({super.key});
@@ -25,39 +26,44 @@ class _WebViewScreenState extends State<WebViewScreen> {
     super.initState();
     _controller = WebViewController();
     BridgeHandler(_controller).register();
-    _controller
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationHandler.create(
-          onProgress: (progress) {
-            if (mounted) setState(() => _loadingProgress = progress);
-          },
-          onLoadingChanged: (isLoading) {
-            if (mounted) {
-              setState(() {
-                _isLoading = isLoading;
-                if (isLoading) _errorMessage = null;
-              });
-            }
-          },
-          onError: (description) {
-            if (mounted) {
-              setState(
-                () => _errorMessage =
-                    description ?? 'Failed to load the application.',
-              );
-            }
-          },
-        ),
-      );
+    _configureController();
+  }
 
-    // Must be registered AFTER setNavigationDelegate so the geolocation
-    // callbacks are not overwritten when the delegate installs its
-    // WebChromeClient.
-    WebViewPermissions(trustedOrigin: Uri.parse(AppConfig.webAppUrl).origin)
-        .attach(_controller);
+  Future<void> _configureController() async {
+    await _controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+    await _controller.setNavigationDelegate(
+      NavigationHandler.create(
+        onProgress: (progress) {
+          if (mounted) setState(() => _loadingProgress = progress);
+        },
+        onLoadingChanged: (isLoading) {
+          if (mounted) {
+            setState(() {
+              _isLoading = isLoading;
+              if (isLoading) _errorMessage = null;
+            });
+          }
+        },
+        onError: (description) {
+          if (mounted) {
+            setState(
+              () => _errorMessage =
+                  description ?? 'Failed to load the application.',
+            );
+          }
+        },
+      ),
+    );
 
-    _loadContent();
+    final trustedOrigin = Uri.parse(AppConfig.webAppUrl).origin;
+    await WebViewPermissions(trustedOrigin: trustedOrigin).attach(_controller);
+    await WebViewFileSelector(
+      controller: _controller,
+      trustedOrigin: trustedOrigin,
+      contextProvider: () => mounted ? context : null,
+    ).attach();
+
+    await _loadContent();
   }
 
   Future<void> _loadContent() async {
