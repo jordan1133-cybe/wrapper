@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sales_rep_wrapper/webview/webview_permissions.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../bridge/bridge_handler.dart';
@@ -24,6 +25,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
     super.initState();
     _controller = WebViewController();
     BridgeHandler(_controller).register();
+    WebViewPermissions(trustedOrigin: Uri.parse(AppConfig.webAppUrl).origin)
+        .attach(_controller);
     _controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(

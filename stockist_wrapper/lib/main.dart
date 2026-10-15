@@ -1,16 +1,17 @@
-
-
-
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:stockist_wrapper/firebase_msg.dart';
 
 
 import 'config/app_config.dart';
+import 'firebase_options.dart';
 import 'webview/webview_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Color(0xFF034F2A),
@@ -20,7 +21,28 @@ void main() {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
+
+  await _initFirebase();
+ // await FirebaseMsg().initFCM();
+
   runApp(const DashenStockistApp());
+   PushService.instance.init();
+}
+
+
+Future<void> _initFirebase() async {
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    if (kDebugMode) {
+      debugPrint('[firebase] initialized: ${Firebase.apps.length} app(s)');
+    }
+  } catch (error) {
+    if (kDebugMode) {
+      debugPrint('[firebase] init failed: $error');
+    }
+  }
 }
 
 class DashenStockistApp extends StatelessWidget {
