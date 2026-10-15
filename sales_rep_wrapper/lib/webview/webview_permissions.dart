@@ -44,7 +44,7 @@ class WebViewPermissions {
     _log('Android permission result: $status');
     return GeolocationPermissionsResponse(
       allow: status.isGranted,
-      retain: true,
+      retain: false,
     );
   }
 
