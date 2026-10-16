@@ -15,6 +15,8 @@ class WebViewScreen extends StatefulWidget {
 
 class _WebViewScreenState extends State<WebViewScreen> {
   late final WebViewController _controller;
+  int _loadingProgress = 0;
+  bool _isLoading = true;
   String? _errorMessage;
 
   @override
@@ -22,30 +24,46 @@ class _WebViewScreenState extends State<WebViewScreen> {
     super.initState();
     _controller = WebViewController();
     BridgeHandler(_controller).register();
-    _controller
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationHandler.create(
-          onProgress: (progress) {},
-          onLoadingChanged: (isLoading) {
-            if (mounted && isLoading) {
-              setState(() {
-                _errorMessage = null;
-              });
-            }
-          },
-          onError: (description) {
-            if (mounted) {
-              setState(
-                () => _errorMessage =
-                    description ?? 'Failed to load the application.',
-              );
-            }
-          },
-        ),
-      );
+    _configureController();
+  }
 
-    _loadContent();
+  Future<void> _configureController() async {
+    await _controller.setBackgroundColor(const Color(0xFF034F2A));
+    await _controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+    await _controller.setNavigationDelegate(
+      NavigationHandler.create(
+        onProgress: (progress) {
+          if (mounted) setState(() => _loadingProgress = progress);
+        },
+        onLoadingChanged: (isLoading) {
+          if (mounted) {
+            setState(() {
+              _isLoading = isLoading;
+              if (isLoading) _errorMessage = null;
+            });
+          }
+        },
+        onError: (description) {
+          if (mounted) {
+            setState(
+              () => _errorMessage =
+                  description ?? 'Failed to load the application.',
+            );
+          }
+        },
+      ),
+    );
+    await _controller.setOnJavaScriptAlertDialog((request) async {
+      final alertUri = Uri.tryParse(request.url);
+      final trustedHosts = AppConfig.trustedHosts;
+      if (!mounted ||
+          alertUri == null ||
+          !trustedHosts.contains(alertUri.host)) {
+        return;
+      }
+      await _showWebAlert();
+    });
+    await _loadContent();
   }
 
   Future<void> _loadContent() async {
@@ -61,6 +79,40 @@ class _WebViewScreenState extends State<WebViewScreen> {
     }
   }
 
+  Future<void> _showWebAlert() async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF034F2A),
+        title: const Text(
+          'Unable to complete request',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Something went wrong. Please try again.',
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          Semantics(
+            button: true,
+            label: 'Dismiss message',
+            child: ExcludeSemantics(
+              child: TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF9EC24F),
+                  minimumSize: const Size(48, 48),
+                ),
+                child: const Text('OK'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => PopScope(
     canPop: false,
@@ -71,6 +123,14 @@ class _WebViewScreenState extends State<WebViewScreen> {
         child: Stack(
           children: [
             WebViewWidget(controller: _controller),
+            if (_isLoading)
+              LinearProgressIndicator(
+                value: _loadingProgress / 100,
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  Color(0xFF9EC24F),
+                ),
+                backgroundColor: Colors.transparent,
+              ),
             if (_errorMessage != null) _errorOverlay(),
           ],
         ),
