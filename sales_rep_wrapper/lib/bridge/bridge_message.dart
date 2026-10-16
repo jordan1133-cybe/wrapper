@@ -2,16 +2,6 @@ import 'dart:convert';
 
 import 'bridge_constants.dart';
 
-/// Provisional web-to-native request envelope.
-///
-/// Expected JSON from PWA:
-/// ```json
-/// {
-///   "requestId": "unique-id",
-///   "action": "get_location",
-///   "payload": { ... }
-/// }
-/// ```
 class BridgeRequest {
   final String requestId;
   final String action;
@@ -23,10 +13,6 @@ class BridgeRequest {
     this.payload = const {},
   });
 
-  /// Parses a JSON string into a [BridgeRequest].
-  ///
-  /// Returns `null` if the JSON is malformed, not an object, or missing required
-  /// fields (`requestId`, `action`).
   static BridgeRequest? fromJson(String jsonString) {
     try {
       final decoded = jsonDecode(jsonString);
@@ -52,22 +38,10 @@ class BridgeRequest {
     }
   }
 
-  /// Safe diagnostic string representation that avoids logging sensitive payload contents.
   String toLogString() =>
       'BridgeRequest(id: $requestId, action: $action, payloadKeys: ${payload.keys.toList()})';
 }
 
-/// Provisional native-to-web response envelope.
-///
-/// JSON sent to PWA:
-/// ```json
-/// {
-///   "requestId": "unique-id",
-///   "status": "success" | "error" | "denied" | "cancelled",
-///   "payload": { ... },
-///   "error": { "code": "...", "message": "..." }
-/// }
-/// ```
 class BridgeResponse {
   final String requestId;
   final String status;
@@ -100,27 +74,6 @@ class BridgeResponse {
     error: BridgeError(code: code, message: message),
   );
 
-  factory BridgeResponse.denied(
-    String requestId, {
-    String message = 'Permission denied.',
-  }) => BridgeResponse(
-    requestId: requestId,
-    status: BridgeConstants.statusDenied,
-    error: BridgeError(
-      code: BridgeConstants.errorPermissionDenied,
-      message: message,
-    ),
-  );
-
-  factory BridgeResponse.cancelled(String requestId) => BridgeResponse(
-    requestId: requestId,
-    status: BridgeConstants.statusCancelled,
-    error: const BridgeError(
-      code: BridgeConstants.errorOperationCancelled,
-      message: 'Operation was cancelled by the user.',
-    ),
-  );
-
   Map<String, dynamic> toJson() => {
     'requestId': requestId,
     'status': status,
@@ -130,7 +83,6 @@ class BridgeResponse {
 
   String toJsonString() => jsonEncode(toJson());
 
-  /// Returns a sanitized log summary that does NOT dump raw base64 or credentials.
   String toLogString() {
     if (error != null) {
       return 'BridgeResponse(id: $requestId, status: $status, error: ${error!.code} - ${error!.message})';
@@ -139,16 +91,13 @@ class BridgeResponse {
       return 'BridgeResponse(id: $requestId, status: $status)';
     }
 
-    // Sanitize large fields like base64 payloads
-    final sanitizedPayload = Map<String, dynamic>.from(payload!).map((
-      key,
-      value,
-    ) {
-      if (key == 'data' && value is String && value.length > 50) {
-        return MapEntry(key, '[base64 ${value.length} chars]');
-      }
-      return MapEntry(key, value);
-    });
+    final sanitizedPayload = Map<String, dynamic>.from(payload!)
+        .map((key, value) {
+          if (key == 'data' && value is String && value.length > 50) {
+            return MapEntry(key, '[base64 ${value.length} chars]');
+          }
+          return MapEntry(key, value);
+        });
 
     return 'BridgeResponse(id: $requestId, status: $status, payload: $sanitizedPayload)';
   }

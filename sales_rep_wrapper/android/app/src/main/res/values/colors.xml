@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="dashen_green">#034F2A</color>
+    <color name="dashen_surface">#182029</color>
+    <color name="dashen_lime">#85C838</color>
+    <color name="dashen_highlight">#25D366</color>
+    <color name="dashen_white">#FFFFFF</color>
+    <color name="splash_background">@color/dashen_green</color>
+</resources>

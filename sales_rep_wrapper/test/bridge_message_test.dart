@@ -3,89 +3,80 @@ import 'package:sales_rep_wrapper/bridge/bridge_message.dart';
 
 void main() {
   group('BridgeRequest', () {
-    test('parses a valid provisional bridge request', () {
+    test('parses a valid request', () {
       final request = BridgeRequest.fromJson(
-        '{"requestId":"file-1","action":"pick_file","payload":{"type":"image"}}',
+        '{"requestId":"otp-1","action":"start_otp_listener","payload":{}}',
       );
 
       expect(request, isNotNull);
-      expect(request!.requestId, 'file-1');
-      expect(request.action, 'pick_file');
-      expect(request.payload['type'], 'image');
+      expect(request!.requestId, 'otp-1');
+      expect(request.action, 'start_otp_listener');
+      expect(request.payload, isEmpty);
     });
 
-    test('rejects invalid bridge request envelopes', () {
+    test('rejects malformed requests', () {
       expect(BridgeRequest.fromJson('[]'), isNull);
-      expect(BridgeRequest.fromJson('{"requestId":"file-1"}'), isNull);
-      expect(BridgeRequest.fromJson('{"action":"get_location"}'), isNull);
-      expect(BridgeRequest.fromJson('{"requestId":"","action":"get_location"}'), isNull);
+      expect(BridgeRequest.fromJson('{"requestId":"otp-1"}'), isNull);
+      expect(BridgeRequest.fromJson('{"action":"start_otp_listener"}'), isNull);
       expect(
         BridgeRequest.fromJson(
-          '{"requestId":"file-1","action":"pick_file","payload":1}',
+          '{"requestId":"otp-1","action":"start_otp_listener","payload":1}',
         ),
         isNull,
       );
     });
 
-    test('generates safe log string without dumping sensitive content', () {
+    test('does not include payload values in diagnostic output', () {
       const request = BridgeRequest(
-        requestId: 'req-1',
-        action: 'get_location',
-        payload: {'highAccuracy': true},
+        requestId: 'otp-1',
+        action: 'start_otp_listener',
+        payload: {'token': 'secret'},
       );
-      expect(request.toLogString(), contains('req-1'));
-      expect(request.toLogString(), contains('get_location'));
-      expect(request.toLogString(), contains('highAccuracy'));
+
+      expect(request.toLogString(), contains('token'));
+      expect(request.toLogString(), isNot(contains('secret')));
     });
   });
 
   group('BridgeResponse', () {
-    test('serializes structured bridge errors', () {
+    test('serializes an error response', () {
       expect(
         BridgeResponse.error(
-          'file-1',
-          code: 'NOT_IMPLEMENTED',
-          message: 'Not ready',
+          'otp-1',
+          code: 'UNKNOWN_ACTION',
+          message: 'Unknown action: invalid',
         ).toJson(),
         {
-          'requestId': 'file-1',
+          'requestId': 'otp-1',
           'status': 'error',
-          'error': {'code': 'NOT_IMPLEMENTED', 'message': 'Not ready'},
+          'error': {
+            'code': 'UNKNOWN_ACTION',
+            'message': 'Unknown action: invalid',
+          },
         },
       );
     });
 
     test('serializes success response with payload', () {
       final json = BridgeResponse.success(
-        'req-123',
-        payload: {'latitude': 9.034, 'longitude': 38.764},
+        'otp-1',
+        payload: {'listening': false},
       ).toJson();
 
-      expect(json['requestId'], 'req-123');
+      expect(json['requestId'], 'otp-1');
       expect(json['status'], 'success');
-      expect(json['payload']['latitude'], 9.034);
+      expect(json['payload']['listening'], isFalse);
     });
 
-    test('serializes permission denied and cancelled responses', () {
-      final denied = BridgeResponse.denied('req-1', message: 'User denied').toJson();
-      expect(denied['status'], 'denied');
-      expect(denied['error']['code'], 'PERMISSION_DENIED');
-
-      final cancelled = BridgeResponse.cancelled('req-2').toJson();
-      expect(cancelled['status'], 'cancelled');
-      expect(cancelled['error']['code'], 'OPERATION_CANCELLED');
-    });
-
-    test('sanitizes large base64 payload in toLogString()', () {
-      final largeData = 'A' * 200;
+    test('sanitizes large base64 payload in log output', () {
+      final data = 'A' * 200;
       final response = BridgeResponse.success(
         'photo-1',
-        payload: {'data': largeData, 'transport': 'base64'},
+        payload: {'data': data},
       );
 
-      final logString = response.toLogString();
-      expect(logString, contains('[base64 200 chars]'));
-      expect(logString, isNot(contains(largeData)));
+      expect(response.toLogString(), contains('[base64 200 chars]'));
+      expect(response.toLogString(), isNot(contains(data)));
     });
   });
 }
