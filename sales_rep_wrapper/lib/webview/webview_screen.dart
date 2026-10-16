@@ -56,10 +56,24 @@ class _WebViewScreenState extends State<WebViewScreen> {
         },
       ),
     );
+    await _controller.setOnJavaScriptAlertDialog((request) async {
+      final alertUri = Uri.tryParse(request.url);
+      final trustedUri = Uri.tryParse(AppConfig.webAppUrl);
+      if (!mounted ||
+          alertUri == null ||
+          trustedUri == null ||
+          alertUri.origin != trustedUri.origin) {
+        return;
+      }
+      await _showWebAlert();
+    });
 
     final trustedOrigin = Uri.parse(AppConfig.webAppUrl).origin;
     // Keep these after setNavigationDelegate; that setup can replace the callbacks.
-    await WebViewPermissions(trustedOrigin: trustedOrigin).attach(_controller);
+    await WebViewPermissions(
+      trustedOrigin: trustedOrigin,
+      contextProvider: () => mounted ? context : null,
+    ).attach(_controller);
     await WebViewFileSelector(
       controller: _controller,
       trustedOrigin: trustedOrigin,
@@ -80,6 +94,40 @@ class _WebViewScreenState extends State<WebViewScreen> {
     } else {
       SystemNavigator.pop();
     }
+  }
+
+  Future<void> _showWebAlert() async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: DashenColors.surface,
+        title: const Text(
+          'Unable to complete request',
+          style: TextStyle(color: DashenColors.text),
+        ),
+        content: const Text(
+          'Something went wrong. Please try again.',
+          style: TextStyle(color: DashenColors.text),
+        ),
+        actions: [
+          Semantics(
+            button: true,
+            label: 'Dismiss message',
+            child: ExcludeSemantics(
+              child: TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                style: TextButton.styleFrom(
+                  foregroundColor: DashenColors.lime,
+                  minimumSize: const Size(48, 48),
+                ),
+                child: const Text('OK'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
