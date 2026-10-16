@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:stockist_wrapper/firebase_msg.dart';
 
-
 import 'config/app_config.dart';
 import 'firebase_options.dart';
 import 'webview/webview_screen.dart';
@@ -23,12 +22,10 @@ Future<void> main() async {
   );
 
   await _initFirebase();
- // await FirebaseMsg().initFCM();
 
   runApp(const DashenStockistApp());
-   PushService.instance.init();
+  PushService.instance.init();
 }
-
 
 Future<void> _initFirebase() async {
   try {

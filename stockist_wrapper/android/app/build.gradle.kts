@@ -1,11 +1,11 @@
-import java.util.Properties
 import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
     id("com.google.gms.google-services")
     // END: FlutterFire Configuration
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 val keystoreProperties = Properties()
@@ -13,13 +13,13 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
+
 android {
-    
     namespace = "com.dashen.breweries.salesincentive"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
-signingConfigs {
+    signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String
             keyPassword = keystoreProperties["keyPassword"] as String
@@ -35,14 +35,10 @@ signingConfigs {
     defaultConfig {
         // TODO(PRODUCTION): Confirm this final application ID with the PM.
         applicationId = "com.dashen.breweries.salesincentive"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
-        // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
-        // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -62,8 +58,4 @@ kotlin {
 
 flutter {
     source = "../.."
-}
-
-dependencies {
-    implementation("com.google.android.gms:play-services-auth-api-phone:18.1.0")
 }

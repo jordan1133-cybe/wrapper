@@ -2,7 +2,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
-
 class PushService {
   PushService._();
   static final PushService instance = PushService._();
@@ -15,7 +14,6 @@ class PushService {
     try {
       final messaging = FirebaseMessaging.instance;
 
-      
       final settings = await messaging.requestPermission();
       _log('permission: ${settings.authorizationStatus}');
 

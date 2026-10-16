@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../bridge/bridge_handler.dart';
 import '../config/app_config.dart';
 import 'navigation_handler.dart';
 
@@ -23,7 +22,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
   void initState() {
     super.initState();
     _controller = WebViewController();
-    BridgeHandler(_controller).register();
     _configureController();
   }
 
@@ -118,7 +116,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
     canPop: false,
     onPopInvokedWithResult: _onBackPressed,
     child: Scaffold(
-      backgroundColor: const Color(0xFF034F2A), // Dashen Green
+      backgroundColor: const Color(0xFF034F2A),
       body: SafeArea(
         child: Stack(
           children: [
@@ -139,7 +137,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
   );
 
   Widget _errorOverlay() => Container(
-    color: const Color(0xFF034F2A), // Dashen Green
+    color: const Color(0xFF034F2A),
     alignment: Alignment.center,
     padding: const EdgeInsets.all(32),
     child: Column(
@@ -164,8 +162,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
         const SizedBox(height: 32),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF9EC24F), // Dashen Light Green
-            foregroundColor: const Color(0xFF034F2A), // Text Color
+            backgroundColor: const Color(0xFF9EC24F),
+            foregroundColor: const Color(0xFF034F2A),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),

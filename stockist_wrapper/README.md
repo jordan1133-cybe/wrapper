@@ -1,17 +1,29 @@
-# stockist_wrapper
+# Stockist Wrapper
 
-A new Flutter project.
+Flutter Android WebView wrapper for the Dashen Stockist PWA.
 
-## Getting Started
+## Build
 
-This project is a starting point for a Flutter application.
+Run commands from this directory:
 
-A few resources to get you started if this is your first Flutter project:
+```sh
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --debug
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+The current Gradle configuration requires local `android/key.properties` values
+even for a debug build. That ignored file is not included in this repository.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Configuration and release
+
+The PWA URL and trusted hosts are configured in `lib/config/app_config.dart`.
+Android application ID and namespace are currently
+`com.dashen.breweries.salesincentive`; confirm the final ID and configure the
+release signing key before release.
+
+Firebase initialization and push messaging are present but remain in progress.
+The checked-in Firebase configuration targets a temporary development project;
+decide whether it should be included before delivering this app to its own
+repository.

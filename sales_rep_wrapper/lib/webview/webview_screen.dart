@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:sales_rep_wrapper/webview/webview_permissions.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import '../bridge/bridge_handler.dart';
 import '../config/app_config.dart';
 import '../config/dashen_colors.dart';
 import 'navigation_handler.dart';
@@ -26,7 +25,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
   void initState() {
     super.initState();
     _controller = WebViewController();
-    BridgeHandler(_controller).register();
     _configureController();
   }
 
