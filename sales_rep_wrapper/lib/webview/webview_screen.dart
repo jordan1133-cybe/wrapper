@@ -5,6 +5,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../bridge/bridge_handler.dart';
 import '../config/app_config.dart';
+import '../config/dashen_colors.dart';
 import 'navigation_handler.dart';
 import 'webview_file_selector.dart';
 
@@ -30,6 +31,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
   }
 
   Future<void> _configureController() async {
+    await _controller.setBackgroundColor(DashenColors.surface);
     await _controller.setJavaScriptMode(JavaScriptMode.unrestricted);
     await _controller.setNavigationDelegate(
       NavigationHandler.create(
@@ -85,6 +87,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
     canPop: false,
     onPopInvokedWithResult: _onBackPressed,
     child: Scaffold(
+      backgroundColor: DashenColors.surface,
       body: SafeArea(
         child: Stack(
           children: [
@@ -92,6 +95,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
             if (_isLoading)
               LinearProgressIndicator(
                 value: _loadingProgress / 100,
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  DashenColors.lime,
+                ),
                 backgroundColor: Colors.transparent,
               ),
             if (_errorMessage != null) _errorOverlay(),
@@ -102,22 +108,36 @@ class _WebViewScreenState extends State<WebViewScreen> {
   );
 
   Widget _errorOverlay() => Container(
-    color: Colors.white,
+    color: DashenColors.surface,
     alignment: Alignment.center,
-    padding: const EdgeInsets.all(32),
+    padding: const EdgeInsets.all(24),
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.wifi_off, size: 64, color: Colors.grey),
-        const SizedBox(height: 16),
+        const Icon(Icons.wifi_off, size: 56, color: DashenColors.lime),
+        const SizedBox(height: 24),
         const Text(
           'Unable to load',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: DashenColors.text,
+          ),
         ),
-        const SizedBox(height: 8),
-        Text(_errorMessage!, textAlign: TextAlign.center),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
+        const Text(
+          'Check your connection and try again.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 16, color: DashenColors.text),
+        ),
+        const SizedBox(height: 32),
         ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            backgroundColor: DashenColors.lime,
+            foregroundColor: DashenColors.surface,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
           onPressed: () {
             setState(() => _errorMessage = null);
             _loadContent();

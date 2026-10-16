@@ -6,6 +6,8 @@ import 'package:sales_rep_wrapper/webview/webview_permissions.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 
+import '../config/dashen_colors.dart';
+
 enum _PhotoSource { camera, gallery }
 
 class WebViewFileSelector {
@@ -47,25 +49,73 @@ class WebViewFileSelector {
 
       final source = await showModalBottomSheet<_PhotoSource>(
         context: context,
+        backgroundColor: DashenColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         builder: (sheetContext) => SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt_outlined),
-                title: const Text('Take photo'),
-                onTap: () => Navigator.pop(sheetContext, _PhotoSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Choose from gallery'),
-                onTap: () => Navigator.pop(sheetContext, _PhotoSource.gallery),
-              ),
-              ListTile(
-                leading: const Icon(Icons.close),
-                title: const Text('Cancel'),
-                onTap: () => Navigator.pop(sheetContext),
-              ),
-            ],
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: DashenColors.subtle,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Add photo',
+                  style: TextStyle(
+                    color: DashenColors.text,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _photoSourceRow(
+                  context: sheetContext,
+                  label: 'Take photo',
+                  icon: Icons.camera_alt_outlined,
+                  source: _PhotoSource.camera,
+                ),
+                const SizedBox(height: 8),
+                _photoSourceRow(
+                  context: sheetContext,
+                  label: 'Choose from gallery',
+                  icon: Icons.photo_library_outlined,
+                  source: _PhotoSource.gallery,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Divider(color: DashenColors.subtle, height: 1),
+                ),
+                Semantics(
+                  button: true,
+                  label: 'Cancel photo selection',
+                  child: ExcludeSemantics(
+                    child: SizedBox(
+                      height: 52,
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        style: TextButton.styleFrom(
+                          foregroundColor: DashenColors.text,
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -118,19 +168,71 @@ class WebViewFileSelector {
           permanentlyDenied
               ? 'Camera access is disabled. Enable it in Settings.'
               : 'Camera permission was denied.',
+          style: const TextStyle(color: DashenColors.text),
         ),
         duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: DashenColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         action: permanentlyDenied
             ? SnackBarAction(
                 label: 'Open settings',
                 onPressed: () async {
                   await openAppSettings();
                 },
+                textColor: DashenColors.lime,
               )
             : null,
       ),
     );
   }
+
+  Widget _photoSourceRow({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required _PhotoSource source,
+  }) => Semantics(
+    button: true,
+    label: label,
+    child: ExcludeSemantics(
+      child: SizedBox(
+        height: 64,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => Navigator.pop(context, source),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: DashenColors.photoTile,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: DashenColors.lime),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: DashenColors.text,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 
   void _log(String message) {
     if (kDebugMode) {
